@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -34,6 +35,10 @@ public class MainActivity extends AppCompatActivity {
     ImageView mImageCam;
     Button mBtnCamera;
     GraphicOverlay mGraphicOverlay;
+    // Max width (portrait mode)
+    private Integer mImageMaxWidth;
+    // Max height (portrait mode)
+    private Integer mImageMaxHeight;
     private static final int INPUT_SIZE = 224;
 
     @Override
@@ -62,10 +67,15 @@ public class MainActivity extends AppCompatActivity {
                 Bitmap bitmap = cameraKitImage.getBitmap();
 
                 bitmap = Bitmap.createScaledBitmap(bitmap, INPUT_SIZE, INPUT_SIZE, false);
-                mGraphicOverlay.clear();
-               // mImageCam.setImageBitmap(bitmap);
-                runTextRecognition(bitmap);
-                cameraView.stop();
+
+
+
+                    // mImageCam.setImageBitmap(resizedBitmap);
+                    bitmap = getResizedBitmap(bitmap);
+                    mGraphicOverlay.clear();
+                    // mImageCam.setImageBitmap(bitmap);
+                    runTextRecognition(bitmap);
+                    cameraView.stop();
 
 
             }
@@ -87,6 +97,67 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private Bitmap getResizedBitmap(Bitmap bitmap) {
+        Bitmap resizedBitmap = null;
+        if (bitmap != null) {
+            // Get the dimensions of the View
+            Pair<Integer, Integer> targetedSize = getTargetedWidthHeight();
+
+            int targetWidth = targetedSize.first;
+            int maxHeight = targetedSize.second;
+
+            // Determine how much to scale down the image
+            float scaleFactor =
+                    Math.max(
+                            (float) bitmap.getWidth() / (float) targetWidth,
+                            (float) bitmap.getHeight() / (float) maxHeight);
+
+            resizedBitmap =
+                    Bitmap.createScaledBitmap(
+                            bitmap,
+                            (int) (bitmap.getWidth() / scaleFactor),
+                            (int) (bitmap.getHeight() / scaleFactor),
+                            true);
+        }
+            return resizedBitmap;
+    }
+    private Integer getImageMaxWidth() {
+        if (mImageMaxWidth == null) {
+            // Calculate the max width in portrait mode. This is done lazily since we need to
+            // wait for
+            // a UI layout pass to get the right values. So delay it to first time image
+            // rendering time.
+            mImageMaxWidth = mImageCam.getWidth();
+        }
+
+        return mImageMaxWidth;
+    }
+
+    // Returns max image height, always for portrait mode. Caller needs to swap width / height for
+    // landscape mode.
+    private Integer getImageMaxHeight() {
+        if (mImageMaxHeight == null) {
+            // Calculate the max width in portrait mode. This is done lazily since we need to
+            // wait for
+            // a UI layout pass to get the right values. So delay it to first time image
+            // rendering time.
+            mImageMaxHeight =
+                    mImageCam.getHeight();
+        }
+
+        return mImageMaxHeight;
+    }
+
+    // Gets the targeted width / height.
+    private Pair<Integer, Integer> getTargetedWidthHeight() {
+        int targetWidth;
+        int targetHeight;
+        int maxWidthForPortraitMode = getImageMaxWidth();
+        int maxHeightForPortraitMode = getImageMaxHeight();
+        targetWidth = maxWidthForPortraitMode;
+        targetHeight = maxHeightForPortraitMode;
+        return new Pair<>(targetWidth, targetHeight);
+    }
     @Override
     public void onResume() {
         super.onResume();
