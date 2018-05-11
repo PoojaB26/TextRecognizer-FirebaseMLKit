@@ -63,8 +63,9 @@ public class MainActivity extends AppCompatActivity {
 
                 bitmap = Bitmap.createScaledBitmap(bitmap, INPUT_SIZE, INPUT_SIZE, false);
                 mGraphicOverlay.clear();
-                mImageCam.setImageBitmap(bitmap);
+               // mImageCam.setImageBitmap(bitmap);
                 runTextRecognition(bitmap);
+                cameraView.stop();
 
 
             }
@@ -78,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
         mBtnCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mGraphicOverlay.clear();
+                cameraView.start();
                 cameraView.captureImage();
             }
         });
