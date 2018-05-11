@@ -11,11 +11,20 @@
         android:id="@+id/camView"
     />
 
+    <com.poojab26.textrecognizer.GraphicUtils.GraphicOverlay
+        android:id="@+id/graphic_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true" />
+
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        tools:text="CLICK"
+        android:text="CLICK"
         android:id="@+id/cameraBtn"
         android:layout_gravity="bottom"/>
 
