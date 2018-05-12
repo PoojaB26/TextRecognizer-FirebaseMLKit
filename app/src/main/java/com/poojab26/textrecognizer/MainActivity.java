@@ -30,27 +30,22 @@ import com.poojab26.textrecognizer.GraphicUtils.GraphicOverlay.Graphic;
 
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class MainActivity extends AppCompatActivity {
-    CameraView cameraView;
-    ImageView mImageCam;
-    Button mBtnCamera;
-    GraphicOverlay mGraphicOverlay;
-    // Max width (portrait mode)
-    private Integer mImageMaxWidth;
-    // Max height (portrait mode)
-    private Integer mImageMaxHeight;
-    private static final int INPUT_SIZE = 224;
+
+    @BindView(R.id.camView) CameraView mCameraView;
+    @BindView(R.id.cameraBtn) Button mCameraButton;
+    @BindView(R.id.graphic_overlay) GraphicOverlay mGraphicOverlay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        cameraView = findViewById(R.id.camView);
-        mImageCam = findViewById(R.id.imgCamera);
-        mBtnCamera = findViewById(R.id.cameraBtn);
-        mGraphicOverlay = findViewById(R.id.graphic_overlay);
+        ButterKnife.bind(this);
 
-        cameraView.addCameraKitListener(new CameraKitEventListener() {
+        mCameraView.addCameraKitListener(new CameraKitEventListener() {
             @Override
             public void onEvent(CameraKitEvent cameraKitEvent) {
 
@@ -65,18 +60,9 @@ public class MainActivity extends AppCompatActivity {
             public void onImage(CameraKitImage cameraKitImage) {
 
                 Bitmap bitmap = cameraKitImage.getBitmap();
-
-                bitmap = Bitmap.createScaledBitmap(bitmap, INPUT_SIZE, INPUT_SIZE, false);
-
-
-
-                    // mImageCam.setImageBitmap(resizedBitmap);
-                    bitmap = getResizedBitmap(bitmap);
-                    mGraphicOverlay.clear();
-                    // mImageCam.setImageBitmap(bitmap);
-                    runTextRecognition(bitmap);
-                    cameraView.stop();
-
+                bitmap = Bitmap.createScaledBitmap(bitmap, mCameraView.getWidth(), mCameraView.getHeight(), false);
+                mCameraView.stop();
+                runTextRecognition(bitmap);
 
             }
 
@@ -86,103 +72,27 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mBtnCamera.setOnClickListener(new View.OnClickListener() {
+        mCameraButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mGraphicOverlay.clear();
-                cameraView.start();
-                cameraView.captureImage();
+                mCameraView.start();
+                mCameraView.captureImage();
+
             }
         });
 
     }
 
-    private Bitmap getResizedBitmap(Bitmap bitmap) {
-        Bitmap resizedBitmap = null;
-        if (bitmap != null) {
-            // Get the dimensions of the View
-            Pair<Integer, Integer> targetedSize = getTargetedWidthHeight();
-
-            int targetWidth = targetedSize.first;
-            int maxHeight = targetedSize.second;
-
-            // Determine how much to scale down the image
-            float scaleFactor =
-                    Math.max(
-                            (float) bitmap.getWidth() / (float) targetWidth,
-                            (float) bitmap.getHeight() / (float) maxHeight);
-
-            resizedBitmap =
-                    Bitmap.createScaledBitmap(
-                            bitmap,
-                            (int) (bitmap.getWidth() / scaleFactor),
-                            (int) (bitmap.getHeight() / scaleFactor),
-                            true);
-        }
-            return resizedBitmap;
-    }
-    private Integer getImageMaxWidth() {
-        if (mImageMaxWidth == null) {
-            // Calculate the max width in portrait mode. This is done lazily since we need to
-            // wait for
-            // a UI layout pass to get the right values. So delay it to first time image
-            // rendering time.
-            mImageMaxWidth = mImageCam.getWidth();
-        }
-
-        return mImageMaxWidth;
-    }
-
-    // Returns max image height, always for portrait mode. Caller needs to swap width / height for
-    // landscape mode.
-    private Integer getImageMaxHeight() {
-        if (mImageMaxHeight == null) {
-            // Calculate the max width in portrait mode. This is done lazily since we need to
-            // wait for
-            // a UI layout pass to get the right values. So delay it to first time image
-            // rendering time.
-            mImageMaxHeight =
-                    mImageCam.getHeight();
-        }
-
-        return mImageMaxHeight;
-    }
-
-    // Gets the targeted width / height.
-    private Pair<Integer, Integer> getTargetedWidthHeight() {
-        int targetWidth;
-        int targetHeight;
-        int maxWidthForPortraitMode = getImageMaxWidth();
-        int maxHeightForPortraitMode = getImageMaxHeight();
-        targetWidth = maxWidthForPortraitMode;
-        targetHeight = maxHeightForPortraitMode;
-        return new Pair<>(targetWidth, targetHeight);
-    }
-    @Override
-    public void onResume() {
-        super.onResume();
-        cameraView.start();
-    }
-
-    @Override
-    public void onPause() {
-        cameraView.stop();
-        super.onPause();
-    }
-
-
     private void runTextRecognition(Bitmap bitmap) {
-        Log.d("TAG", "In function");
         FirebaseVisionImage image = FirebaseVisionImage.fromBitmap(bitmap);
         FirebaseVisionTextDetector detector = FirebaseVision.getInstance()
                 .getVisionTextDetector();
-        //mButton.setEnabled(false);
         detector.detectInImage(image)
                 .addOnSuccessListener(
                         new OnSuccessListener<FirebaseVisionText>() {
                             @Override
                             public void onSuccess(FirebaseVisionText texts) {
-                               // mButton.setEnabled(true);
                                 processTextRecognitionResult(texts);
                             }
                         })
@@ -191,7 +101,6 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onFailure(@NonNull Exception e) {
                                 // Task failed with an exception
-                                //mButton.setEnabled(true);
                                 e.printStackTrace();
                             }
                         });
@@ -209,11 +118,24 @@ public class MainActivity extends AppCompatActivity {
             for (int j = 0; j < lines.size(); j++) {
                 List<FirebaseVisionText.Element> elements = lines.get(j).getElements();
                 for (int k = 0; k < elements.size(); k++) {
-                    Graphic textGraphic = new TextGraphic(mGraphicOverlay, elements.get(k));
+                    GraphicOverlay.Graphic textGraphic = new TextGraphic(mGraphicOverlay, elements.get(k));
                     mGraphicOverlay.add(textGraphic);
 
                 }
             }
         }
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mCameraView.start();
+    }
+
+    @Override
+    public void onPause() {
+        mCameraView.stop();
+        super.onPause();
+    }
+
 }

@@ -10,7 +10,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.util.Log;
-import com.poojab26.textrecognizer.GraphicUtils.GraphicOverlay.Graphic;
+import com.poojab26.textrecognizer.GraphicUtils.GraphicOverlay.Graphic; //todo
 import com.google.firebase.ml.vision.text.FirebaseVisionText;
 
 /**
@@ -50,7 +50,6 @@ public class TextGraphic extends Graphic {
      */
     @Override
     public void draw(Canvas canvas) {
-        Log.d(TAG, "on draw text graphic");
         if (element == null) {
             throw new IllegalStateException("Attempting to draw a null text.");
         }
